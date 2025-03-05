@@ -6,25 +6,29 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class QIFSummary:
     def __init__(self, filepath, schema_obj):
         """
         Initialize by parsing the QIF XML file using lxml and storing a preloaded XMLSchema object.
-        
+
         Args:
             filepath (str): Path to the QIF XML file.
             schema_obj (xmlschema.XMLSchema): A preloaded XMLSchema object for validation.
         """
         self.filepath = filepath
+        self.name = os.path.basename(filepath)
         self.ns = {"qif": "http://qifstandards.org/xsd/qif3"}
         logger.debug("Initializing QIFSummary for file: %s", filepath)
         self.basic_xml_errors = []
         try:
-            with open(self.filepath, 'rb') as f:
+            with open(self.filepath, "rb") as f:
                 xml_content = f.read()
 
-            if b'##other' in xml_content:
-                xml_content = xml_content.replace(b'##other', b'http://example.com/other')
+            if b"##other" in xml_content:
+                xml_content = xml_content.replace(
+                    b"##other", b"http://example.com/other"
+                )
                 self.basic_xml_errors.append("Replaced b'##other' with a valid URI.")
             self.tree = etree.fromstring(xml_content, parser=etree.XMLParser())
             self.root = self.tree
@@ -43,7 +47,7 @@ class QIFSummary:
     def get_schema_validation(self):
         """
         Uses the provided lxml XMLSchema object to validate the QIF file.
-        
+
         Returns:
             dict: Contains keys "schema_valid" (bool) and "errors" (None or error details).
         """
@@ -80,7 +84,9 @@ class QIFSummary:
         """
         logger.debug("Calculating feature summary.")
         summary = {}
-        features_section = self.root.find(".//{http://qifstandards.org/xsd/qif3}Features")
+        features_section = self.root.find(
+            ".//{http://qifstandards.org/xsd/qif3}Features"
+        )
         if features_section is None:
             logger.debug("No Features section found.")
             return summary
@@ -129,7 +135,9 @@ class QIFSummary:
     def get_file_units_dict(self):
         """Extracts the FileUnits section as a dictionary."""
         logger.debug("Extracting FileUnits section.")
-        file_units_element = self.root.find(".//{http://qifstandards.org/xsd/qif3}FileUnits")
+        file_units_element = self.root.find(
+            ".//{http://qifstandards.org/xsd/qif3}FileUnits"
+        )
         if file_units_element is not None:
             file_units_dict = self.traverse_xml(file_units_element)
             logger.debug("Extracted FileUnits dictionary.")
@@ -163,14 +171,29 @@ class QIFSummary:
                                     all_columns.add(f"{key} {sub_key}")
                                 else:
                                     for sub_key, sub_value in value[0].items():
-                                        row[f"{key} {sub_key}"] = (sub_value[0] if (isinstance(sub_value, list) and sub_value) else sub_value)
+                                        row[f"{key} {sub_key}"] = (
+                                            sub_value[0]
+                                            if (
+                                                isinstance(sub_value, list)
+                                                and sub_value
+                                            )
+                                            else sub_value
+                                        )
                                         all_columns.add(f"{key} {sub_key}")
                             else:
-                                row[key] = value[0] if isinstance(value[0], str) else str(value[0])
+                                row[key] = (
+                                    value[0]
+                                    if isinstance(value[0], str)
+                                    else str(value[0])
+                                )
                                 all_columns.add(key)
                         elif isinstance(value, dict):
                             for sub_key, sub_value in value.items():
-                                row[f"{key} {sub_key}"] = (sub_value[0] if (isinstance(sub_value, list) and sub_value) else sub_value)
+                                row[f"{key} {sub_key}"] = (
+                                    sub_value[0]
+                                    if (isinstance(sub_value, list) and sub_value)
+                                    else sub_value
+                                )
                                 all_columns.add(f"{key} {sub_key}")
                         else:
                             row[key] = value
@@ -196,18 +219,23 @@ class QIFSummary:
           - normalized units table (rows and column headers).
         """
         logger.debug("Generating complete summary for file: %s", self.filepath)
-        normalized_units, unit_columns = self.normalize_units(self.get_file_units_dict())
+        normalized_units, unit_columns = self.normalize_units(
+            self.get_file_units_dict()
+        )
         organised_units = {}
         for item in normalized_units:
-            if 'UnitConversion Factor' in item.keys():
-                if item['SIUnitName'] not in organised_units:
-                    organised_units[item['SIUnitName']] = {}
-                organised_units[item['SIUnitName']][item['UnitName']] = item['UnitConversion Factor']
-        
+            if "UnitConversion Factor" in item.keys():
+                if item["SIUnitName"] not in organised_units:
+                    organised_units[item["SIUnitName"]] = {}
+                organised_units[item["SIUnitName"]][item["UnitName"]] = item[
+                    "UnitConversion Factor"
+                ]
+
         summary = {
             "filename": os.path.basename(self.filepath),
             "file_size": round(os.path.getsize(self.filepath) / 1024, 2),
-            "qif_version": self.root.attrib.get("versionQIF") or self.root.attrib.get("version", "Unknown"),
+            "qif_version": self.root.attrib.get("versionQIF")
+            or self.root.attrib.get("version", "Unknown"),
             "top_sections": self.get_top_section_summary(),
             "feature_summary": self.get_feature_summary(),
             "fileunits_repetition": self.get_repeated_section_summary(),
@@ -219,3 +247,72 @@ class QIFSummary:
         }
         logger.debug("Final summary: %s", summary)
         return summary
+
+    def compare_to(self, other):
+        """
+        Compare the summary of this QIF file with another QIFSummary instance.
+
+        Returns a dictionary containing a list of differences.
+        Each difference is represented by a dictionary with a 'path'
+        and the differing values from file1 and file2.
+        """
+        differences = []
+
+        # Compare top sections
+        self_top = self.get_top_section_summary()
+        other_top = other.get_top_section_summary()
+        for key in set(self_top.keys()).union(other_top.keys()):
+            val1 = self_top.get(key, 0)
+            val2 = other_top.get(key, 0)
+            if val1 != val2:
+                differences.append(
+                    {
+                        "path": f"top_sections/{key}",
+                        self.name: val1,
+                        other.name: val2,
+                    }
+                )
+
+        # Compare feature summary
+        self_feature = self.get_feature_summary()
+        other_feature = other.get_feature_summary()
+        for key in set(self_feature.keys()).union(other_feature.keys()):
+            val1 = self_feature.get(key, 0)
+            val2 = other_feature.get(key, 0)
+            if val1 != val2:
+                differences.append(
+                    {
+                        "path": f"feature_summary/{key}",
+                        self.name: val1,
+                        other.name: val2,
+                    }
+                )
+
+        # Compare repeated section summary for FileUnits
+        self_repeat = self.get_repeated_section_summary()
+        other_repeat = other.get_repeated_section_summary()
+        for key in set(self_repeat.keys()).union(other_repeat.keys()):
+            val1 = self_repeat.get(key, 0)
+            val2 = other_repeat.get(key, 0)
+            if val1 != val2:
+                differences.append(
+                    {
+                        "path": f"fileunits_repetition/{key}",
+                        self.name: val1,
+                        other.name: val2,
+                    }
+                )
+
+        # Compare QIF version
+        version1 = self.root.attrib.get("versionQIF") or self.root.attrib.get(
+            "version", "Unknown"
+        )
+        version2 = other.root.attrib.get("versionQIF") or other.root.attrib.get(
+            "version", "Unknown"
+        )
+        if version1 != version2:
+            differences.append(
+                {"path": "qif_version", self.filepath: val1, other.filepath: val2}
+            )
+
+        return {"differences": differences, "name1": self.name, "name2": other.name}

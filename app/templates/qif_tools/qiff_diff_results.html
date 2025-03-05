@@ -1,0 +1,31 @@
+{% extends 'base/base.html' %}
+{% block content %}
+
+<div class="max-w-6xl mx-auto mt-8 transition ease-in-out delay-150">
+    <div class="bg-white shadow rounded-lg p-6 mb-4">
+        <h1 class="text-2xl font-bold mb-4">QIF Diff</h1>
+        <!-- <h2 class="text-xl font-bold mt-6 text-gray-700">{{diff.name1}} : {{diff.name2}}</h2> -->
+
+        <table class="w-full border border-gray-300 rounded-lg mb-4">
+            <thead class="bg-gray-100 text-left">
+                <tr>
+                    <th class="p-3">Path</th>
+                    <th class="p-3">{{diff.name1}}</th>
+                    <th class="p-3">{{diff.name2}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in diff.differences%}
+                <tr class="border-b">
+                    <td class="p-3">{{d.path}}</td>
+                    <td class="p-3">{{d[diff.name1]}}</td>
+                    <td class="p-3">{{d[diff.name2]}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+{% endblock %}

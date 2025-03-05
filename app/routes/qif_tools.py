@@ -15,6 +15,7 @@ from werkzeug.utils import secure_filename
 import xmlschema
 from lxml import etree
 from .qifsummary import QIFSummary
+import logging
 
 base_dir = os.path.join(os.getcwd(), "QIF3.0-2018-ANSI", "xsd", "QIFApplications")
 schema_path = os.path.join(base_dir, "QIFDocument.xsd")
@@ -25,6 +26,8 @@ schema_doc = etree.parse(schema_path)
 schema_obj = etree.XMLSchema(schema_doc)
 
 qif_bp = Blueprint("qif", __name__)
+
+logger = logging.getLogger(__name__)
 
 
 # Helper function to check allowed file types
@@ -91,3 +94,36 @@ def qif_details(filename):
     qif_summary = QIFSummary(filepath, schema_obj)
     metadata = qif_summary.get_summary()
     return render_template("qif_tools/qif_details.html", metadata=metadata)
+
+@qif_bp.route("/compare", methods=["POST"])
+def compare_files():
+    # Get file names from the form
+    file1 = request.form.get("file1")
+    file2 = request.form.get("file2")
+    
+    logger.info("Comparing files: %s and %s", file1, file2)
+    
+    upload_folder = current_app.config["UPLOAD_FOLDER"]
+    filepath1 = os.path.join(upload_folder, file1)
+    filepath2 = os.path.join(upload_folder, file2)
+    
+    if not os.path.exists(filepath1):
+        abort(404, f"File {file1} not found.")
+    if not os.path.exists(filepath2):
+        abort(404, f"File {file2} not found.")
+    
+    
+    # Create QIFSummary instances for both files.
+    try:
+        qif_summary1 = QIFSummary(filepath1, schema_obj)
+        qif_summary2 = QIFSummary(filepath2, schema_obj)
+    except Exception as e:
+        logger.error("Error creating QIFSummary: %s", e)
+        abort(500, f"Error processing files: {e}")
+    
+    # Compare the two summaries.
+    differences = qif_summary1.compare_to(qif_summary2)
+    logger.info("Differences: %s", differences)
+    
+    # Return the differences as a JSON response.
+    return render_template("qif_tools/qiff_diff_results.html", diff=differences)
