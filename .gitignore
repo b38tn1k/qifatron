@@ -1,0 +1,23 @@
+# macOS system files
+.DS_Store
+
+# Python bytecode and cache
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment (if using venv)
+venv/
+.env
+.env.local
+*.sqlite
+*.sqlite3
+instance/
+
+# Node.js dependencies (but keep package.json and package-lock.json)
+node_modules/
+
+# Tailwind (keep tailwind.config.js)
+postcss.config.js

@@ -1,0 +1,68 @@
+{% extends 'base/base.html' %}
+{% block content %}
+
+<div class="max-w-6xl mx-auto mt-8 transition ease-in-out delay-150">
+    <div class="bg-white shadow rounded-lg p-6 mb-4">
+        <h1 class="text-2xl font-bold mb-4">QIF File Details</h1>
+
+        {% if metadata.error %}
+        <p class="text-red-600">Error: {{ metadata.error }}</p>
+        {% else %}
+        <table class="w-full border border-gray-300 rounded-lg">
+            <tbody>
+                <tr class="border-b">
+                    <td class="p-3 font-bold">Filename:</td>
+                    <td class="p-3">{{ metadata.filename }}</td>
+                </tr>
+                <tr class="border-b">
+                    <td class="p-3 font-bold">File Size:</td>
+                    <td class="p-3">{{ metadata.filesize }} KB</td>
+                </tr>
+                <tr class="border-b">
+                    <td class="p-3 font-bold">QIF Version:</td>
+                    <td class="p-3">{{ metadata.qif_version }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 class="text-xl font-bold mt-6">Measurement Units</h2>
+
+        {% if metadata.normalized_units %}
+        <table class="w-full border border-gray-300 rounded-lg mb-4">
+            <thead class="bg-gray-100 text-left">
+                <tr>
+                    {% for col in metadata.unit_columns %}
+                    <th class="p-3">{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in metadata.normalized_units %}
+                <tr class="border-b">
+                    {% for col in metadata.unit_columns %}
+                    <td class="p-3">
+                        {% if row[col] is mapping %}
+                        {% for key, value in row[col].items() %}
+                        {% if value is iterable and value is not string %}
+                        {{ key }}: {{ value | join(", ") }}
+                        {% else %}
+                        {{ key }}: {{ value }}
+                        {% endif %}
+                        {% endfor %}
+                        {% else %}
+                        {{ row.get(col, "—") }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No measurement units found.</p>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
