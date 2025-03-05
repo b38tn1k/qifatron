@@ -15,6 +15,47 @@
     {%include 'base/nav.html'%}
     {% block content %}{% endblock %}
 
+    <script src="{{ url_for('static', filename='js/tablesort.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tablesort.number.js') }}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll("table").forEach(function (table) {
+
+                // If no <th> already has data-sort-default, set it on the first one.
+                if (!table.querySelector("th[data-sort-default]")) {
+                    let firstTh = table.querySelector("th");
+                    if (firstTh) {
+                        firstTh.setAttribute("data-sort-default", "");
+                    }
+                }
+
+                // For each header cell, check if its column is exclusively numeric.
+                let headers = table.querySelectorAll("thead th");
+                let rows = table.querySelectorAll("tbody tr");
+
+                headers.forEach(function (header, colIndex) {
+                    let allNumeric = true;
+                    rows.forEach(function (row) {
+                        // Get the cell at the current column index.
+                        let cell = row.cells[colIndex];
+                        if (cell) {
+                            let text = cell.textContent.trim();
+                            // If cell is not empty and is not a valid number, mark column as non-numeric.
+                            if (text !== "" && isNaN(parseFloat(text))) {
+                                allNumeric = false;
+                            }
+                        }
+                    });
+                    if (allNumeric) {
+                        header.setAttribute("data-sort", "number");
+                    }
+                });
+
+                new Tablesort(table);
+            });
+        });
+    </script>
+
 </body>
 
 </html>

@@ -15,8 +15,8 @@
                     <td class="p-3">{{ metadata.filename }}</td>
                 </tr>
                 <tr class="border-b">
-                    <td class="p-3 font-bold">File Size:</td>
-                    <td class="p-3">{{ metadata.filesize }} KB</td>
+                    <td class="p-3 font-bold">File Size (KB):</td>
+                    <td class="p-3">{{ metadata.file_size }}</td>
                 </tr>
                 <tr class="border-b">
                     <td class="p-3 font-bold">QIF Version:</td>
@@ -25,44 +25,128 @@
             </tbody>
         </table>
 
-        <h2 class="text-xl font-bold mt-6">Measurement Units</h2>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6 mb-4">
+        <h1 class="text-2xl font-bold mb-4">Schema Validation</h1>
+        <p>
+            {% if metadata.validation.schema_valid is not none %}
+            Schema Validation:
+            {% if metadata.validation.schema_valid %}
+            <span class="text-green-600">Valid</span>
+            {% else %}
+            <span class="text-red-600">Invalid</span>
 
-        {% if metadata.normalized_units %}
+
+        <h2 class="text-xl font-bold mt-6">Schema Errors</h2>
+
+        {% for e in metadata.validation.errors %}
+        <p class="p-3"> {{ e }} </p>
+        {% endfor %}
+        {% endif %}
+        {% else %}
+        Schema Validation: Not performed ({{ metadata.validation.errors }})
+        {% endif %}
+        {% if metadata.xml_errors %}
+        <h2 class="text-xl font-bold mt-6">XML Errors</h2>
+        {% for e in metadata.xml_errors %}
+        <p class="p-3"> {{ e }} </p>`
+        {% endfor %}
+        {% endif %}
+        </p>
+
+    </div>
+    <div class="bg-white shadow rounded-lg p-6 mb-4">
+
+        <h1 class="text-2xl font-bold mb-4">X-Ray</h1>
+
+        <h2 class="text-xl font-bold mt-6">Top Sections</h2>
         <table class="w-full border border-gray-300 rounded-lg mb-4">
             <thead class="bg-gray-100 text-left">
                 <tr>
-                    {% for col in metadata.unit_columns %}
-                    <th class="p-3">{{ col }}</th>
-                    {% endfor %}
+                    <th class="p-3">Section</th>
+                    <th class="p-3">Count</th>
                 </tr>
             </thead>
             <tbody>
-                {% for row in metadata.normalized_units %}
+                {% for section, count in metadata.top_sections.items() %}
                 <tr class="border-b">
-                    {% for col in metadata.unit_columns %}
-                    <td class="p-3">
-                        {% if row[col] is mapping %}
-                        {% for key, value in row[col].items() %}
-                        {% if value is iterable and value is not string %}
-                        {{ key }}: {{ value | join(", ") }}
-                        {% else %}
-                        {{ key }}: {{ value }}
-                        {% endif %}
-                        {% endfor %}
-                        {% else %}
-                        {{ row.get(col, "—") }}
-                        {% endif %}
-                    </td>
-                    {% endfor %}
+                    <td class="p-3">{{ section }}</td>
+                    <td class="p-3">{{ count }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+
+        <h2 class="text-xl font-bold mt-6">Feature Summary</h2>
+        <table class="w-full border border-gray-300 rounded-lg mb-4">
+            <thead class="bg-gray-100 text-left">
+                <tr>
+                    <th class="p-3">Feature</th>
+                    <th class="p-3">Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feature, count in metadata.feature_summary.items() %}
+                <tr class="border-b">
+                    <td class="p-3">{{ feature }}</td>
+                    <td class="p-3">{{ count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2 class="text-xl font-bold mt-6">FileUnits Repetition</h2>
+        <table class="w-full border border-gray-300 rounded-lg mb-4">
+            <thead class="bg-gray-100 text-left">
+                <tr>
+                    <th class="p-3">Unit Group</th>
+                    <th class="p-3">Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for group, count in metadata.fileunits_repetition.items() %}
+                <tr class="border-b">
+                    <td class="p-3">{{ group }}</td>
+                    <td class="p-3">{{ count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+    <div class="bg-white shadow rounded-lg p-6 mb-4">
+        <h1 class="text-2xl font-bold mb-4">Measurement Units & Conversion</h1>
+
+        {% if metadata.organised_units %}
+        {% for key in metadata.organised_units %}
+        <h3 class="text-xl font-bold mt-6">{{key}}</h3>
+
+        <table class="w-full border border-gray-300 rounded-lg mb-4">
+            <thead class="bg-gray-100 text-left">
+                <tr>
+                    {% for sk in metadata.organised_units[key] %}
+                    <th class="p-3">{{sk}}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-b">
+                    {% for sk in metadata.organised_units[key] %}
+                    <td class="p-3">{{metadata.organised_units[key][sk]}}</td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+
+
+        {% endfor %}
         {% else %}
         <p>No measurement units found.</p>
         {% endif %}
+
         {% endif %}
     </div>
 </div>
+
 
 {% endblock %}

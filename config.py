@@ -26,7 +26,7 @@ class Config:
 
     # Upload settings
     UPLOAD_FOLDER = os.path.join(basedir, "uploads")
-    ALLOWED_EXTENSIONS = {"xml", "qif", "txt"}
+    ALLOWED_EXTENSIONS = {"xml", "qif", "txt", "stp"}
     MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100 MB limit
 
     # Ensure the upload folder exists

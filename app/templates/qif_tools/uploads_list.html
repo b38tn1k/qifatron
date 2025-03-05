@@ -1,13 +1,12 @@
 <div class="bg-white shadow rounded-lg p-6 mb-4">
     <h1 class="text-2xl font-bold mb-4">Uploaded Files</h1>
-
     {% if files %}
-    <table class="w-full border border-gray-300 rounded-lg">
-        <thead class="bg-gray-100 text-left">  <!-- Force left alignment -->
+    <table id="file-list-table" class="w-full border border-gray-300 rounded-lg">
+        <thead class="bg-gray-100 text-left">
             <tr>
                 <th class="p-3">Filename</th>
-                <th class="p-3"> </th>
-                <th class="p-3"> </th>
+                <th class="p-3">Download</th>
+                <th class="p-3">View Details</th>
             </tr>
         </thead>
         <tbody>
