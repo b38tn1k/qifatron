@@ -1,29 +1,31 @@
-<div class="bg-white shadow rounded-lg p-6 mb-4">
-  <h1 class="text-2xl font-bold mb-4">QIF Diff</h1>
-  <form action="{{ url_for('qif.compare_files') }}" method="post">
-    <div class="mb-4">
-      <label for="file1" class="block mb-1 font-semibold">File 1:</label>
-      <select name="file1" id="file1"
-        class="block w-full h-12 p-3 border border-gray-300 rounded-md appearance-none bg-white text-lg focus:ring-blue-500 focus:border-blue-500">
-        {% for file in files|sort %}
-        <option value="{{ file }}">{{ file }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="mb-4">
-      <label for="file2" class="block mb-1 font-semibold">File 2:</label>
-      <select name="file2" id="file2"
-        class="block w-full h-12 p-3 border border-gray-300 rounded-md appearance-none bg-white text-lg focus:ring-blue-500 focus:border-blue-500">
-        {% for file in files|sort %}
-        <option value="{{ file }}">{{ file }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="flex justify-end">
-      <button type="submit"
-        class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-lg shadow text-xl">
-        Compare
-      </button>
-    </div>
-  </form>
+<div class="md:w-1/2">
+  <div class="bg-white shadow rounded-lg p-6 mb-4">
+    <h1 class="text-2xl font-bold mb-4">QIF Diff</h1>
+    <form action="{{ url_for('qif.compare_files') }}" method="post">
+      <div class="mb-4">
+        <label for="file1" class="block mb-1 font-semibold">File 1:</label>
+        <select name="file1" id="file1"
+          class="block w-full h-12 p-3 border border-gray-300 rounded-md appearance-none bg-white text-lg focus:ring-blue-500 focus:border-blue-500">
+          {% for file in files|sort %}
+          <option value="{{ file }}">{{ file }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-4">
+        <label for="file2" class="block mb-1 font-semibold">File 2:</label>
+        <select name="file2" id="file2"
+          class="block w-full h-12 p-3 border border-gray-300 rounded-md appearance-none bg-white text-lg focus:ring-blue-500 focus:border-blue-500">
+          {% for file in files|sort %}
+          <option value="{{ file }}">{{ file }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex justify-end">
+        <button type="submit"
+          class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-lg shadow text-xl">
+          Compare
+        </button>
+      </div>
+    </form>
+  </div>
 </div>

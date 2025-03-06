@@ -669,3 +669,22 @@ class QIFSummary:
             info["xml_snippet"] = f"<serialization error: {e}>"
 
         return info
+    
+    def get_raw_xml(self):
+        """
+        Reads and returns the *entire* QIF XML file as a raw Unicode string.
+        Useful if you need to serve or inspect the original XML contents directly.
+        """
+        with open(self.filepath, "r", encoding="utf-8") as f:
+            return f.read()
+
+    def as_dict(self):
+        """
+        Builds and returns a full dictionary representation of this QIF file
+        by recursively traversing the entire XML tree.
+
+        Note: This can be very large if the QIF is huge. Consider partial traversal or
+        streaming approaches for extremely large files.
+        """
+        # Leverage the self.traverse_xml(...) method defined in QIFSummary
+        return self.traverse_xml(self.root, current_path="")

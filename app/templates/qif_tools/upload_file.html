@@ -1,33 +1,36 @@
-<div class="bg-white shadow rounded-lg p-6 mb-4">
-    <h1 class="text-2xl font-bold mb-4">Upload a QIF File</h1>
+<div class="md:w-1/2 flex flex-col mb-4 md:mb-0">
+    <div class="bg-white shadow rounded-lg p-6 mb-4 flex-grow">
+        <h1 class="text-2xl font-bold mb-4">Upload a QIF File</h1>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div class="mb-4">
-        {% for category, message in messages %}
-        <div class="p-3 rounded-lg 
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-4">
+            {% for category, message in messages %}
+            <div class="p-3 rounded-lg 
                             {% if category == 'success' %}
                                 bg-green-100 text-green-700
                             {% else %}
                                 bg-red-100 text-red-700
                             {% endif %}
                             ">
-            {{ message }}
+                {{ message }}
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    {% endwith %}
+        {% endif %}
+        {% endwith %}
 
-    <!-- Drag and Drop Upload Form -->
-    <form id="upload-form" action="{{ url_for('qif.start') }}" method="post" enctype="multipart/form-data">
-        <div id="drop-zone" class="border-dashed border-2 border-gray-300 p-6 rounded-lg text-center cursor-pointer">
-            <p id="drop-text" class="text-gray-600">Drag & Drop a file here or <span
-                    class="text-blue-600 hover:underline">click to select</span></p>
-            <input title="Upload" id="file-upload" type="file" name="file" class="hidden" required>
-        </div>
-    </form>
+        <!-- Drag and Drop Upload Form -->
+        <form id="upload-form" action="{{ url_for('qif.start') }}" method="post" enctype="multipart/form-data">
+            <div id="drop-zone"
+                class="flex items-center justify-center border-dashed border-2 border-gray-300 p-6 rounded-lg text-center cursor-pointer h-48">
+                <p id="drop-text" class="text-gray-600">Drag & Drop a file here or <span
+                        class="text-blue-600 hover:underline">click to select</span></p>
+                <input title="Upload" id="file-upload" type="file" name="file" class="hidden" required>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
