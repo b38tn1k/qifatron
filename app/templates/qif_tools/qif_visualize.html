@@ -1,6 +1,4 @@
 <!-- qif_visualize.html -->
-{% extends 'base/base.html' %}
-{% block content %}
 
 <div id="p5-container" style="width: 100%; height: 600px;">
     <script src="{{ url_for('static', filename='js/p5.js') }}"></script>
@@ -78,39 +76,87 @@
                 prevMouseY = mouseY;
             }
 
-            // background(240);
+            // Clear the canvas
             clear();
+
+            // We'll compute the mouse's "graph-space" coords:
+            // Inverse the transformations: (mouseX - offsetX)/scaleFactor
+            let graphMouseX = (mouseX - offsetX) / scaleFactor;
+            let graphMouseY = (mouseY - offsetY) / scaleFactor;
 
             push();
             translate(offsetX, offsetY);
             scale(scaleFactor);
 
-            // Draw edges & nodes
-            // We'll do a BFS or just store everything in allNodes.
+            // Draw edges
             stroke(100);
             for (let node of allNodes) {
-                // draw lines from node to its children
                 for (let child of node.children) {
                     line(node.x, node.y, child.x, child.y);
                 }
             }
 
             noStroke();
+
+            // We'll find the closest node to the graphMouse coords
+            let closestNode = null;
+            let minDistSq = Infinity;
+            let mindx = Infinity;
+            let mindy = Infinity;
+
             for (let node of allNodes) {
                 // color depends on node.depth
                 let cFrom = color(150, 100, 255);
                 let cTo = color(255, 150, 100);
                 let t = map(node.depth, 0, maxDepth, 0, 1);
                 fill(lerpColor(cFrom, cTo, t));
-                ellipse(node.x, node.y, 40, 40);
+                ellipse(node.x, node.y, 40 * node.scale, 40 * node.scale);
 
                 fill(0);
                 textSize(20);
                 textAlign(CENTER, CENTER);
                 text(node.name, node.x, node.y - 25);
+
+                // Distance to mouse, will rapid escapes
+                let dx = node.x - graphMouseX;
+                let dy = node.y - graphMouseY;
+                if ((abs(dx) < mindx) || (abs(dy) < mindy)) {
+                    if (abs(dx) < mindx) {
+                        mindx = abs(dx);
+                    }
+
+                    if (abs(dy) < mindy) {
+                        mindy = abs(dy);
+                    }
+
+                    let distSq = dx * dx + dy * dy;
+                    if (distSq < minDistSq) {
+                        minDistSq = distSq;
+                        closestNode = node;
+                    }
+                }
             }
 
             pop();
+
+            if (closestNode) {
+                let childCount = closestNode.children ? closestNode.children.length : 0;
+                let txt = closestNode.name + " [" + childCount + "]";
+                textSize(24);
+
+                // We'll measure the width/height
+                let tw = textWidth(txt);
+                let th = 24; // approximate text height, or use a leading
+
+                // Draw black rectangle behind text
+                fill(0); // black background
+                rect(10, 10, tw + 8, th + 8);
+
+                // Now draw the text in white
+                fill(255);
+                textAlign(LEFT, TOP);
+                text(txt, 14, 14);
+            }
         }
 
         // Basic mouseWheel zoom
@@ -129,7 +175,7 @@
             if (depth > maxDepth) {
                 return { name: key + " (max depth)", depth, children: [] };
             }
-            let node = { name: key, depth, children: [] };
+            let node = { name: key, depth, scale, children: [] };
             if (obj && typeof obj === "object" && !Array.isArray(obj)) {
                 let keys = Object.keys(obj).filter(k => k !== "_path");
                 for (let k of keys) {
@@ -156,6 +202,7 @@
             node.x = x;
             node.y = y;
             node.depth = depth;
+            node.scale = 1.0 - depth / maxDepth;
 
             // Keep a global list of nodes for easy bounding box & draw
             if (!node.children) node.children = [];
@@ -164,12 +211,15 @@
             if (node.children.length === 0) {
                 return;
             }
-            
+
             let angleGap = (angleEnd - angleStart);
             let angleStep = angleGap / (node.children.length);
 
-            let radius = 60 + (depth) * 60;
+            let radius = 60 + (maxDepth - depth) * 10;
             let childAngle = angleStart;
+            if (node.children.length != 1) {
+                childAngle -= angleGap / 4;
+            }
 
             for (let c of node.children) {
                 let cx = x + radius * cos(childAngle);
@@ -194,4 +244,3 @@
 
     </script>
 </div>
-{% endblock %}
