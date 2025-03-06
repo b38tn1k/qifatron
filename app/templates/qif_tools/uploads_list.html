@@ -7,6 +7,7 @@
                 <th class="p-3">Filename</th>
                 <th class="p-3">Download</th>
                 <th class="p-3">View Details</th>
+                <th class="p-3">Search Feature</th>
             </tr>
         </thead>
         <tbody>
@@ -18,8 +19,20 @@
                         class="text-blue-600 hover:underline">Download</a>
                 </td>
                 <td class="p-3">
-                    <a href="{{ url_for('qif.qif_details', filename=file) }}" 
-                       class="text-blue-600 hover:underline">View Details</a>
+                    <a href="{{ url_for('qif.qif_details', filename=file) }}" class="text-blue-600 hover:underline">View
+                        Details</a>
+                </td>
+                <td class="p-3">
+                    <form action="{{ url_for('qif.search_feature') }}" method="post" class="flex items-center gap-2">
+                        <input type="hidden" name="qif_file" value="{{ file }}">
+                        <input type="text" name="feature_name"
+                            class="block w-32 p-2 border border-gray-300 rounded-md appearance-none bg-white text-sm focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="e.g. 54a">
+                        <button type="submit"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm">
+                            Search
+                        </button>
+                    </form>
                 </td>
             </tr>
             {% endfor %}

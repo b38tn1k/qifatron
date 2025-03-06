@@ -1,0 +1,200 @@
+{% extends 'base/base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="{{url_for('static', filename='css/xml_lint.css')}}">
+<script src="{{url_for('static', filename='js/highlight.min.js')}}"></script>
+<script>hljs.highlightAll();</script>
+
+<div class="max-w-6xl mx-auto mt-8 transition ease-in-out delay-150">
+    <div class="bg-white shadow rounded-lg p-6 mb-4">
+        <h1 class="text-2xl font-bold mb-4">Search Feature Results</h1>
+
+        <p class="mb-2">
+            Searching in <span class="font-semibold">{{ file }}</span> for feature:
+            <span class="font-semibold">{{ feature_name }}</span>
+        </p>
+
+        {% if chase_result.error %}
+        <div class="text-red-600 font-semibold">
+            Error: {{ chase_result.error }}
+        </div>
+        {% else %}
+        <!-- Nominal Found -->
+        <div class="mb-8">
+            <h2 class="text-xl font-bold mb-2">Nominal Found</h2>
+            {% if chase_result.details.characteristic_nominal %}
+            <table class="w-full border border-gray-300 rounded-lg mb-4">
+                <thead class="bg-gray-100 text-left">
+                    <tr>
+                        <th class="p-3">Property</th>
+                        <th class="p-3">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold">Tag</td>
+                        <td class="p-3">{{ chase_result.details.characteristic_nominal.tag }}</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold">ID</td>
+                        <td class="p-3">{{ chase_result.details.characteristic_nominal.id }}</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold">Name</td>
+                        <td class="p-3">{{ chase_result.details.characteristic_nominal.name }}</td>
+                    </tr>
+                    {% if chase_result.details.characteristic_nominal.xml_snippet %}
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold align-top">XML Snippet</td>
+                        <td class="p-3">
+                            <pre class="whitespace-pre-wrap text-sm"> <code class="language-xml">{{ chase_result.details.characteristic_nominal.xml_snippet }}</code></pre>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No CharacteristicNominal details found.</p>
+            {% endif %}
+        </div>
+
+        <!-- Downward References -->
+        <div class="mb-8">
+            <h2 class="text-xl font-bold mb-2">Downward References</h2>
+            {% if chase_result.down_chain.feature_nominal_ids %}
+            <table class="w-full border border-gray-300 rounded-lg mb-4">
+                <thead class="bg-gray-100 text-left">
+                    <tr>
+                        <th class="p-3">Feature Nominal IDs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fn_id in chase_result.down_chain.feature_nominal_ids %}
+                    <tr class="border-b">
+                        <td class="p-3">{{ fn_id }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            {% if chase_result.down_chain.feature_nominals %}
+            <h3 class="text-lg font-semibold mt-4 mb-2">Feature Nominals</h3>
+            {% for fn in chase_result.down_chain.feature_nominals %}
+            <table class="w-full border border-gray-300 rounded-lg mb-4">
+                <thead class="bg-gray-100 text-left">
+                    <tr>
+                        <th class="p-3">Property</th>
+                        <th class="p-3">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold">Tag</td>
+                        <td class="p-3">{{ fn.tag }}</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold">ID</td>
+                        <td class="p-3">{{ fn.id }}</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold">Name</td>
+                        <td class="p-3">{{ fn.name }}</td>
+                    </tr>
+                    {% if fn.xml_snippet %}
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold align-top">XML Snippet</td>
+                        <td class="p-3">
+                            <pre class="whitespace-pre-wrap text-sm"> <code class="language-xml">{{ fn.xml_snippet }}</code></pre>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        <!-- Upward References -->
+        <div class="mb-4">
+            <h2 class="text-xl font-bold mb-2">Upward References</h2>
+
+            <!-- Characteristic Items -->
+            {% if chase_result.up_chain.characteristic_items %}
+            <h3 class="text-lg font-semibold mt-4 mb-2">Characteristic Items</h3>
+            {% for ci in chase_result.up_chain.characteristic_items %}
+            <table class="w-full border border-gray-300 rounded-lg mb-4">
+                <thead class="bg-gray-100 text-left">
+                    <tr>
+                        <th class="p-3">Property</th>
+                        <th class="p-3">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold">Tag</td>
+                        <td class="p-3">{{ ci.tag }}</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold">ID</td>
+                        <td class="p-3">{{ ci.id }}</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold">Name</td>
+                        <td class="p-3">{{ ci.name }}</td>
+                    </tr>
+                    {% if ci.xml_snippet %}
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold align-top">XML Snippet</td>
+                        <td class="p-3">
+                            <pre class="whitespace-pre-wrap text-sm"> <code class="language-xml">{{ ci.xml_snippet }}</code></pre>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            {% endfor %}
+            {% endif %}
+
+            <!-- PMI Displays -->
+            {% if chase_result.up_chain.pmi_displays %}
+            <h3 class="text-lg font-semibold mt-4 mb-2">PMI Displays</h3>
+            {% for pd in chase_result.up_chain.pmi_displays %}
+            <table class="w-full border border-gray-300 rounded-lg mb-4">
+                <thead class="bg-gray-100 text-left">
+                    <tr>
+                        <th class="p-3">Property</th>
+                        <th class="p-3">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold">Tag</td>
+                        <td class="p-3">{{ pd.tag }}</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold">ID</td>
+                        <td class="p-3">{{ pd.id }}</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold">Name</td>
+                        <td class="p-3">{{ pd.name }}</td>
+                    </tr>
+                    {% if pd.xml_snippet %}
+                    <tr class="border-b">
+                        <td class="p-3 font-semibold align-top">XML Snippet</td>
+                        <td class="p-3">
+                            <pre class="whitespace-pre-wrap text-sm"> <code class="language-xml">{{ pd.xml_snippet }}</code></pre>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            {% endfor %}
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

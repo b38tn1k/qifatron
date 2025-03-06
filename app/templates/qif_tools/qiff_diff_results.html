@@ -18,8 +18,8 @@
                 {% for d in diff.differences%}
                 <tr class="border-b">
                     <td class="p-3">{{d.path}}</td>
-                    <td class="p-3">{{d[diff.name1]}}</td>
-                    <td class="p-3">{{d[diff.name2]}}</td>
+                    <td class="p-3">{{d.file1}}</td>
+                    <td class="p-3">{{d.file2}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

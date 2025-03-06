@@ -67,7 +67,6 @@ def start():
             if f.lower().endswith(".qif"):
                 location = os.path.join(root, f)
                 relative_location = os.path.relpath(location, upload_folder)
-                print(relative_location)
                 qif_files.append(relative_location)
 
     return render_template("qif_tools/start.html", files=qif_files)
@@ -92,7 +91,10 @@ def qif_details(filename):
     if not os.path.exists(filepath):
         abort(404, "File not found.")
     qif_summary = QIFSummary(filepath, schema_obj)
+
     metadata = qif_summary.get_summary()
+    # print(qif_summary.chase_feature('54a'))
+
     return render_template("qif_tools/qif_details.html", metadata=metadata)
 
 @qif_bp.route("/compare", methods=["POST"])
@@ -101,7 +103,7 @@ def compare_files():
     file1 = request.form.get("file1")
     file2 = request.form.get("file2")
     
-    logger.info("Comparing files: %s and %s", file1, file2)
+    logger.debug("Comparing files: %s and %s", file1, file2)
     
     upload_folder = current_app.config["UPLOAD_FOLDER"]
     filepath1 = os.path.join(upload_folder, file1)
@@ -123,7 +125,27 @@ def compare_files():
     
     # Compare the two summaries.
     differences = qif_summary1.compare_to(qif_summary2)
-    logger.info("Differences: %s", differences)
+    print (differences)
+    logger.debug("Differences: %s", differences)
     
     # Return the differences as a JSON response.
     return render_template("qif_tools/qiff_diff_results.html", diff=differences)
+
+@qif_bp.route("/search-feature", methods=["POST"])
+def search_feature():
+    filename = request.form.get("qif_file")
+    feature_name = request.form.get("feature_name")
+
+    upload_folder = current_app.config["UPLOAD_FOLDER"]
+    filepath = os.path.join(upload_folder, filename)
+    if not os.path.exists(filepath):
+        abort(404, "File not found.")
+    qif_summary = QIFSummary(filepath, schema_obj)
+    chase_result = qif_summary.chase_feature(feature_name)
+    print(chase_result)
+
+    # Render a new template that presents chase_result
+    return render_template("qif_tools/search_results.html",
+                           file=filename,
+                           feature_name=feature_name,
+                           chase_result=chase_result)
