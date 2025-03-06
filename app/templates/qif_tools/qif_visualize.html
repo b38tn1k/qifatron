@@ -2,72 +2,72 @@
 {% extends 'base/base.html' %}
 {% block content %}
 
-
-<div id="p5-container" style="width: 100%; height: 400px;">
-
-    <!-- Load p5.js from a CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
-
+<div id="p5-container" style="width: 100%; height: 600px;">
+    <script src="{{ url_for('static', filename='js/p5.js') }}"></script>
     <script>
         let qifData = null;
-        let maxDepth = 6;  // how many levels to recurse
         let rootNode = null;
+        let maxDepth = 20;
 
-        // For panning & zooming:
-        let offsetX = 0;
-        let offsetY = 0;
+        // We'll store a list of all nodes so we can easily draw them 
+        // and compute bounding boxes without recursion each time.
+        let allNodes = [];
+
+        // Pan/Zoom
+        let offsetX = 0, offsetY = 0;
         let scaleFactor = 1.0;
         let dragging = false;
         let prevMouseX, prevMouseY;
 
         function setup() {
             const container = document.getElementById("p5-container");
-            // For demonstration, let's rely on offsetWidth/offsetHeight
             let w = window.innerWidth;
             let h = window.innerHeight;
-            // let w = container.offsetWidth;
-            // let h = container.offsetHeight;
+            let canvas = createCanvas(w, h).parent("p5-container");
 
-            // Create the canvas at that size
-            canvas = createCanvas(w, h);
-            canvas.parent("p5-container");
-
-            // Event listeners for panning
+            // Basic panning
             canvas.mousePressed(() => {
                 dragging = true;
                 prevMouseX = mouseX;
                 prevMouseY = mouseY;
             });
-            canvas.mouseReleased(() => { dragging = false; });
+            canvas.mouseReleased(() => {
+                dragging = false;
+            });
 
-            // Load the dictionary from /qif/dictxml/<filename>
             const path = "/qif/dictxml/" + "{{ filename }}";
             fetch(path)
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
                     qifData = data;
-                    // Build a node hierarchy
+                    // Build the hierarchical structure
                     rootNode = buildHierarchy(qifData, "root", 0);
+
+                    // 1) Compute positions for each node in a radial layout
+                    //    We'll define root at (0,0) 
+                    computeLayout(rootNode, 0, 0, 0, TWO_PI, 0);
+
+                    // 2) Compute bounding box of all nodes
+                    let { minX, maxX, minY, maxY } = findBoundingBox(allNodes);
+
+                    // 3) Compute a scaleFactor to fit entire bounding box in the canvas
+                    let margin = 50;
+                    let boxWidth = maxX - minX;
+                    let boxHeight = maxY - minY;
+                    let sx = (width - margin) / boxWidth;
+                    let sy = (height - margin) / boxHeight;
+                    scaleFactor = min(sx, sy);
+
+                    // 4) Compute offset so bounding box is centered
+                    let midX = (minX + maxX) / 2;
+                    let midY = (minY + maxY) / 2;
+                    offsetX = width / 2 - midX * scaleFactor;
+                    offsetY = height / 2 - midY * scaleFactor;
+
                 })
                 .catch(err => {
-                    console.error("Error loading data:", err);
+                    console.error("Error fetching QIF data:", err);
                 });
-        }
-
-        function mouseWheel(event) {
-            // Typically, a positive event.delta means user is scrolling down
-            // (which might zoom out), and negative delta means scrolling up.
-            let zoomAmount = 0.01;
-            if (event.delta > 0) {
-                // Zoom out
-                scaleFactor *= (1 - zoomAmount);
-            } else {
-                // Zoom in
-                scaleFactor *= (1 + zoomAmount);
-            }
-
-            // Returning false prevents the default browser behavior (e.g. page scroll).
-            return false;
         }
 
         function draw() {
@@ -78,106 +78,120 @@
                 prevMouseY = mouseY;
             }
 
-            background(240);
+            // background(240);
+            clear();
+
+            push();
             translate(offsetX, offsetY);
             scale(scaleFactor);
 
-            if (!rootNode) {
-                fill(100);
-                text("Loading data...", 10, 30);
-                return;
+            // Draw edges & nodes
+            // We'll do a BFS or just store everything in allNodes.
+            stroke(100);
+            for (let node of allNodes) {
+                // draw lines from node to its children
+                for (let child of node.children) {
+                    line(node.x, node.y, child.x, child.y);
+                }
             }
 
-            // We'll place the root in the center, then do a recursive layout
-            push();
-            translate(width / 2 / scaleFactor, height / 2 / scaleFactor);
-            drawNode(rootNode);
+            noStroke();
+            for (let node of allNodes) {
+                // color depends on node.depth
+                let cFrom = color(150, 100, 255);
+                let cTo = color(255, 150, 100);
+                let t = map(node.depth, 0, maxDepth, 0, 1);
+                fill(lerpColor(cFrom, cTo, t));
+                ellipse(node.x, node.y, 40, 40);
+
+                fill(0);
+                textSize(20);
+                textAlign(CENTER, CENTER);
+                text(node.name, node.x, node.y - 25);
+            }
+
             pop();
         }
 
-        // Build a node structure from the JSON, up to maxDepth
-        function buildHierarchy(obj, key, depth) {
-            // This function returns an object: { name, children: [], depth, ... }
-
-            if (depth > maxDepth) {
-                return {
-                    name: key + " ... (max depth reached)",
-                    depth: depth,
-                    children: []
-                };
+        // Basic mouseWheel zoom
+        function mouseWheel(event) {
+            let zoomAmount = 0.001;
+            if (event.delta > 0) {
+                scaleFactor *= (1 - zoomAmount * abs(event.delta));
+            } else {
+                scaleFactor *= (1 + zoomAmount * abs(event.delta));
             }
+            return false;
+        }
 
-            let node = {
-                name: key,
-                depth: depth,
-                children: []
-            };
-
-            // If it's an object, iterate its keys
+        // Build a node hierarchy from the JSON
+        function buildHierarchy(obj, key, depth) {
+            if (depth > maxDepth) {
+                return { name: key + " (max depth)", depth, children: [] };
+            }
+            let node = { name: key, depth, children: [] };
             if (obj && typeof obj === "object" && !Array.isArray(obj)) {
-                // We want to skip special keys like "_path"
                 let keys = Object.keys(obj).filter(k => k !== "_path");
                 for (let k of keys) {
-                    let childVal = obj[k];
-                    node.children.push(buildHierarchy(childVal, k, depth + 1));
+                    node.children.push(buildHierarchy(obj[k], k, depth + 1));
                 }
-            } else if (Array.isArray(obj)) {
-                // It's an array – we can display each index
-                // If too big, consider slicing
+            }
+            else if (Array.isArray(obj)) {
                 for (let i = 0; i < obj.length; i++) {
                     node.children.push(buildHierarchy(obj[i], `[${i}]`, depth + 1));
                 }
             } else {
-                // It's a leaf (string, number, etc.)
-                // We'll just store its value as the name
-                node.name = key + ": " + String(obj).substring(0, 50); // limit size
-                node.children = [];
+                node.name = `${key}: ${String(obj).substring(0, 50)}`;
             }
-
             return node;
         }
 
-        // Visualize a node with a radial layout for children
-        function drawNode(node) {
-            // Node circle
-            let colorFrom = color(150, 100, 255); // purple
-            let colorTo = color(255, 150, 100); // orange
-            let t = map(node.depth, 0, maxDepth, 0, 1);
-            let nodeColor = lerpColor(colorFrom, colorTo, t);
+        /**
+         * computeLayout(node, x, y, angleStart, angleEnd, depth)
+         * 1) Assign node.x, node.y = (x,y)
+         * 2) spread children in [angleStart..angleEnd] radius
+         */
+        function computeLayout(node, x, y, angleStart, angleEnd, depth) {
+            // Set node coords
+            node.x = x;
+            node.y = y;
+            node.depth = depth;
 
-            noStroke();
-            fill(nodeColor);
-            ellipse(0, 0, 40, 40);
-
-            // name label
-            fill(0);
-            textAlign(CENTER, CENTER);
-            textSize(10);
-            text(node.name, 0, -25);
+            // Keep a global list of nodes for easy bounding box & draw
+            if (!node.children) node.children = [];
+            allNodes.push(node);
 
             if (node.children.length === 0) {
-                return; // no children => no radial layout
+                return;
             }
+            
+            let angleGap = (angleEnd - angleStart);
+            let angleStep = angleGap / (node.children.length);
 
-            let angleStep = TWO_PI / node.children.length;
-            let radius = 100 + 100 * (maxDepth - node.depth + 1); // children further out with depth
-            for (let i = 0; i < node.children.length; i++) {
-                let angle = i * angleStep;
+            let radius = 60 + (depth) * 60;
+            let childAngle = angleStart;
 
-                // position for the child
-                let cx = radius * cos(angle);
-                let cy = radius * sin(angle);
-
-                // Draw a line from this node to child
-                stroke(80);
-                line(0, 0, cx, cy);
-
-                // push the matrix and draw child
-                push();
-                translate(cx, cy);
-                drawNode(node.children[i]);
-                pop();
+            for (let c of node.children) {
+                let cx = x + radius * cos(childAngle);
+                let cy = y + radius * sin(childAngle);
+                computeLayout(c, cx, cy, childAngle, childAngle + angleStep, depth + 1);
+                childAngle += angleStep;
             }
         }
+
+        // find the bounding box of all nodes (minX, maxX, minY, maxY)
+        function findBoundingBox(nodes) {
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            for (let n of nodes) {
+                if (n.x < minX) minX = n.x;
+                if (n.x > maxX) maxX = n.x;
+                if (n.y < minY) minY = n.y;
+                if (n.y > maxY) maxY = n.y;
+            }
+            return { minX, maxX, minY, maxY };
+        }
+
     </script>
-    {% endblock %}
+</div>
+{% endblock %}
