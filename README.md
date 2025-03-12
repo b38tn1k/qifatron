@@ -1,19 +1,25 @@
-## LOCAL PORTAL
+## QIFATRON
+
+## Setup
+
+```
+cd app/
+npm install
+cd ..
+python -m venv venv 
+source venv/bin/requirements
+pip install -r requirements
+python app.py
+```
+
+```
+# windows I think sourcing the venv is the only difference
+\venv\Scripts\Activate.ps1 
+```
+
 
 ## Tailwind Node Changes
 
 ```
 npx tailwindcss -i ./static/css/style.css -o ./static/css/output.css --watch
-```
-
-## TMUX
-Keeps the development server alive even when I am logged out
-
-```
-tmux new -s flask_server
-
-to detach: Ctrl+B, the D
-
-to reattach:
-tmux attach -t flask_server
 ```

@@ -22,9 +22,10 @@ base_dir = os.path.join(os.getcwd(), "QIF3.0-2018-ANSI", "xsd", "QIFApplications
 schema_path = os.path.join(base_dir, "QIFDocument.xsd")
 
 # schema_obj = xmlschema.XMLSchema(schema_path, base_url=base_dir)
-
 schema_doc = etree.parse(schema_path)
 schema_obj = etree.XMLSchema(schema_doc)
+
+
 
 qif_bp = Blueprint("qif", __name__)
 
@@ -145,6 +146,8 @@ def search_feature():
     qif_summary = load_qif_summary(filename)
     chase_result = qif_summary.chase_feature(feature_name)
     print(chase_result)
+    print()
+    qif_summary.assert_symmetry()
 
     # Render a new template that presents chase_result
     return render_template(

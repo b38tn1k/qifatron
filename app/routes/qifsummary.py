@@ -564,6 +564,51 @@ class QIFSummary:
                 if name_elem is not None and name_elem.text == feature_name:
                     return nom
         return None
+    
+    def _find_characteristic_all_names(self):
+        """
+        Finds <CharacteristicNominal> with <Name>==feature_name. Returns the element or None.
+        """
+        nominal_tags = [
+            "DiameterCharacteristicNominal",
+            "FlatnessCharacteristicNominal",
+            "PositionCharacteristicNominal",
+            "ProfileCharacteristicNominal",
+            "SurfaceProfileCharacteristicNominal",
+            "AngularityCharacteristicNominal",
+            "ParallelismCharacteristicNominal",
+            "PerpendicularityCharacteristicNominal",
+        ]
+        noms_with_names = []
+        for tag in nominal_tags:
+            nominals = self.root.findall(".//{http://qifstandards.org/xsd/qif3}" + tag)
+
+            for nom in nominals:
+                name_elem = nom.find("{http://qifstandards.org/xsd/qif3}Name")
+                if name_elem is not None:
+                    noms_with_names.append(nom)
+        return noms_with_names
+    
+    def assert_symmetry(self):
+        all_noms = self._find_characteristic_all_names()
+        all_results = []
+        for nom in all_noms:
+            nom_id = nom.get("id")
+            my_dict = {}
+            my_dict['name'] = nom.find("{http://qifstandards.org/xsd/qif3}Name").text 
+            my_dict["nominal_id"] = nom_id
+            my_dict["summary"] = self._element_summary(nom)
+            my_dict["down_chain"] = self._trace_down_nominal(nom)
+            my_dict["up_chain"] = self._trace_up_nominal(nom_id)
+            all_results.append(my_dict)
+        
+        for r in all_results:
+            print(r['name'])
+            print (r['summary'] is not None, r['down_chain'] is not None, r['up_chain'] is not None)
+            print()
+        return all_results
+
+
 
     def _trace_down_nominal(self, char_nom_element):
         """

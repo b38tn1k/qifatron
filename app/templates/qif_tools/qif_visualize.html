@@ -16,12 +16,17 @@
         let scaleFactor = 1.0;
         let dragging = false;
         let prevMouseX, prevMouseY;
+        let sliderContainer;    // we'll store this globally
+        let closestNodeInfo;    // a <span> to hold closest node info
+        let closestNode = null; // updated each frame in draw()
 
         function setup() {
             const container = document.getElementById("p5-container");
             let w = window.innerWidth;
             let h = window.innerHeight;
             let canvas = createCanvas(w, h).parent("p5-container");
+            sliderContainer = createDiv("").parent("p5-container");
+            createControls();
 
             // Basic panning
             canvas.mousePressed(() => {
@@ -38,34 +43,93 @@
                 .then(res => res.json())
                 .then(data => {
                     qifData = data;
-                    // Build the hierarchical structure
-                    rootNode = buildHierarchy(qifData, "root", 0);
-
-                    // 1) Compute positions for each node in a radial layout
-                    //    We'll define root at (0,0) 
-                    computeLayout(rootNode, 0, 0, 0, TWO_PI, 0);
-
-                    // 2) Compute bounding box of all nodes
-                    let { minX, maxX, minY, maxY } = findBoundingBox(allNodes);
-
-                    // 3) Compute a scaleFactor to fit entire bounding box in the canvas
-                    let margin = 50;
-                    let boxWidth = maxX - minX;
-                    let boxHeight = maxY - minY;
-                    let sx = (width - margin) / boxWidth;
-                    let sy = (height - margin) / boxHeight;
-                    scaleFactor = min(sx, sy);
-
-                    // 4) Compute offset so bounding box is centered
-                    let midX = (minX + maxX) / 2;
-                    let midY = (minY + maxY) / 2;
-                    offsetX = width / 2 - midX * scaleFactor;
-                    offsetY = height / 2 - midY * scaleFactor;
-
+                    build();
                 })
                 .catch(err => {
                     console.error("Error fetching QIF data:", err);
                 });
+        }
+
+        function createControls() {
+            // 1) Create a container div in front of the canvas
+            sliderContainer = createDiv("").parent("p5-container");
+            sliderContainer.position(10, 60);
+            sliderContainer.style("z-index", "999");
+            sliderContainer.style("background", "gray");
+            sliderContainer.style("padding", "8px");
+            sliderContainer.style("border-radius", "4px");
+	    let h5 = createElement('h5', '{{ filename }}').parent(sliderContainer);
+
+            let d1 = createDiv("").parent(sliderContainer);
+
+            closestNodeInfo = createSpan("").parent(d1);
+            closestNodeInfo.style("color", "white");
+            closestNodeInfo.style("margin-left", "8px");
+
+            // 2) Slider label and slider (same as before)
+            // const label = createSpan("Max Depth: ").parent(sliderContainer);
+            // label.style("color", "white");
+            // label.style("font-weight", "bold");
+            // label.style("margin-right", "6px");
+
+            let d2 = createDiv("").parent(sliderContainer);
+
+            const depthSlider = createSlider(1, 20, maxDepth);
+            depthSlider.parent(d2);
+            depthSlider.style("width", "200px");
+            depthSlider.input(() => {
+                maxDepth = depthSlider.value();
+                allNodes = [];
+                build(); // re-build layout
+            });
+
+            let d3 = createDiv("").parent(sliderContainer);
+
+            // 3) 'Center' button (optional)
+            const centerButton = createButton("Center").parent(d3);
+            centerButton.style("margin-left", "8px");
+            centerButton.mousePressed(() => {
+                allNodes = [];
+                build();
+            });
+
+        }
+
+        function keyPressed() {
+            if (key == 's') {
+                saveImage();
+            }
+        }
+
+        function saveImage() {
+            var timestamp = year() + nf(month(), 2) + nf(day(), 2) + "-" + nf(hour(), 2) + nf(minute(), 2) + nf(second(), 2);
+            save(timestamp + ".png");
+        }
+
+        function build() {
+            // Build the hierarchical structure
+            rootNode = buildHierarchy(qifData, "root", 0);
+
+            // 1) Compute positions for each node in a radial layout
+            //    We'll define root at (0,0) 
+            computeLayout(rootNode, 0, 0, 0, TWO_PI, 0);
+
+            // 2) Compute bounding box of all nodes
+            let { minX, maxX, minY, maxY } = findBoundingBox(allNodes);
+
+            // 3) Compute a scaleFactor to fit entire bounding box in the canvas
+            let margin = 50;
+            let boxWidth = maxX - minX;
+            let boxHeight = maxY - minY;
+            let sx = (width - margin) / boxWidth;
+            let sy = (height - margin) / boxHeight;
+            scaleFactor = min(sx, sy);
+
+            // 4) Compute offset so bounding box is centered
+            let midX = (minX + maxX) / 2;
+            let midY = (minY + maxY) / 2;
+            offsetX = width / 2 - midX * scaleFactor;
+            offsetY = height / 2 - midY * scaleFactor;
         }
 
         function draw() {
@@ -141,22 +205,31 @@
 
             if (closestNode) {
                 let childCount = closestNode.children ? closestNode.children.length : 0;
-                let txt = closestNode.name + " [" + childCount + "]";
-                textSize(24);
-
-                // We'll measure the width/height
-                let tw = textWidth(txt);
-                let th = 24; // approximate text height, or use a leading
-
-                // Draw black rectangle behind text
-                fill(0); // black background
-                rect(10, 10, tw + 8, th + 8);
-
-                // Now draw the text in white
-                fill(255);
-                textAlign(LEFT, TOP);
-                text(txt, 14, 14);
+                let txt = `${closestNode.name} [${childCount}]`;
+                closestNodeInfo.html(txt);
+            } else {
+                // If no node is found (unlikely, but safe to handle)
+                closestNodeInfo.html("");
             }
+
+            // if (closestNode) {
+            //     let childCount = closestNode.children ? closestNode.children.length : 0;
+            //     let txt = closestNode.name + " [" + childCount + "]";
+            //     textSize(24);
+
+            //     // We'll measure the width/height
+            //     let tw = textWidth(txt);
+            //     let th = 24; // approximate text height, or use a leading
+
+            //     // Draw black rectangle behind text
+            //     fill(0); // black background
+            //     rect(10, 10, tw + 8, th + 8);
+
+            //     // Now draw the text in white
+            //     fill(255);
+            //     textAlign(LEFT, TOP);
+            //     text(txt, 14, 14);
+            // }
         }
 
         // Basic mouseWheel zoom

@@ -1,0 +1,86 @@
+<DiameterCharacteristicNominal id="24844">
+    <Attributes n="4">
+        <AttributeStr name="_3dv.FeatureDetailCode" value="DIA" />
+        <AttributeUser name="_3dv.PmiReportableAdvanced"
+            nameUserAttribute="AttributePmiReportable">
+            <UserDataXML>
+                <ReportableStates xmlns="##other" n="2">
+                    <Reportable reportType="4" val="1" />
+                    <Reportable reportType="56" val="1" />
+                </ReportableStates>
+            </UserDataXML>
+        </AttributeUser>
+        <AttributeStr name="CAMC" value="No" />
+        <AttributeStr name="_3dv.TextPrefix" value="{DIAMETER}" />
+    </Attributes>
+    <CharacteristicDefinitionId>24843</CharacteristicDefinitionId>
+    <FeatureNominalIds n="1">
+        <Id>32243</Id>
+    </FeatureNominalIds>
+    <Name>54a</Name>
+    <CharacteristicDesignator>
+        <Designator>117</Designator>
+        <UUID>ef5f50e1-82d0-4144-a422-86b5d95e4a87</UUID>
+    </CharacteristicDesignator>
+    <TargetValue decimalPlaces="3">0.5925</TargetValue>
+</DiameterCharacteristicNominal>
+
+
+<DiameterCharacteristicItem id="32709">
+    <Name>Diameter Item 32709</Name>
+    <CharacteristicDesignator>
+        <Designator>117</Designator>
+        <UUID>c33605a9-b8be-4711-b369-4c0270dbd766</UUID>
+    </CharacteristicDesignator>
+    <FeatureItemIds n="1">
+        <Id>32710</Id>
+    </FeatureItemIds>
+    <CharacteristicNominalId>24844</CharacteristicNominalId>
+</DiameterCharacteristicItem>
+
+
+<CharacteristicNominalIds n="92">
+<Id>24716</Id>
+<Id>24809</Id>
+<Id>24820</Id>
+<Id>24832</Id>
+<Id>24835</Id>
+<Id>24841</Id>
+<Id>24844</Id>
+
+
+<PMIDisplay>
+    <Attributes n="5">
+        <AttributeI1 name="DimensionDisplayMode" value="2" />
+        <AttributeI2 name="_3dv.PmiGroupId" value="6 -1" />
+        <AttributeI1 name="_3dv.ArrowheadSide" value="1" />
+        <AttributeBool name="_3dv.DisplayInfoCorrectPositions" value="1" />
+        <AttributeBool name="_3dv.TextAboveLeader" value="0" />
+    </Attributes>
+    <Plane>
+        <AnnotationViewId>
+            <Id>25121</Id>
+        </AnnotationViewId>
+        <Origin>58.1723556518555 -773.038513183594 -37.575080871582</Origin>
+    </Plane>
+    <Texts lineHeight="12.7000007629395" fontIndex="4" n="2">
+        <Text>
+            <Data>{DIAMETER}</Data>
+            <XY>0 0</XY>
+        </Text>
+        <Text>
+            <Data>.625{BR}.560</Data>
+            <XY>13.2303978046521 11.4300006866455</XY>
+        </Text>
+    </Texts>
+    <LeaderExtend>
+        <StartPoint>-54.9458321012715 73.6363788723598</StartPoint>
+        <EndPoint>-25.400001525879 7.22733885492369</EndPoint>
+        <HeadForm>ARROW_FILLED</HeadForm>
+        <HeadHeight>10.1600006103516</HeadHeight>
+        <PointExtension>0 7.22733885492369</PointExtension>
+    </LeaderExtend>
+    <Reference>
+        <Id>24844</Id>
+    </Reference>
+</PMIDisplay>
