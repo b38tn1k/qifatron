@@ -1,4 +1,12 @@
-## QIFATRON
+## QIFatron / QIFtronics
+
+A collection of .QIF (quality information framework) tools  with a pretty bland but useful web interface. For forensic stuff - useful when transitioning to GD&T in PMI / DX stuff
+
+  - qif diff
+  - xml validation
+  - qif validation
+  - qif visualisation
+  - PMI annotation search
 
 ## Setup
 
