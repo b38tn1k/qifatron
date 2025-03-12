@@ -15,6 +15,7 @@ venv/
 *.sqlite
 *.sqlite3
 instance/
+*.qif
 
 # Node.js dependencies (but keep package.json and package-lock.json)
 node_modules/
