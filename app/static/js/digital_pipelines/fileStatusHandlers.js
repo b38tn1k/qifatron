@@ -32,6 +32,18 @@ function setupButtons() {
         handleStatusClick("clear");
     };
     buttonContainer.appendChild(clearButton);
+
+    const screenshotButton = document.createElement("button");
+    screenshotButton.textContent = "screenshot";
+    screenshotButton.className =
+        "block w-full text-left px-4 py-2 mb-2 bg-blue-100 hover:bg-blue-200 rounded-md text-sm font-medium";
+    screenshotButton.style.border = "1px solid black";
+    screenshotButton.style.background = "rgb(200, 255, 200)";
+    screenshotButton.onclick = () => {
+        console.log("Saving screenshot...");
+        saveCanvas('pipeline_screenshot', 'png');
+    };
+    buttonContainer.appendChild(screenshotButton);
 }
 
 function handleStatusClick(statusKey) {

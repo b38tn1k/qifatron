@@ -35,6 +35,7 @@ function setup() {
 function draw() {
     // Draw zone boundaries and labels.
     clear();
+    let ts = textSize();
     zones.forEach(zone => {
         strokeWeight(1);
         stroke(0);
@@ -111,7 +112,6 @@ function draw() {
         noStroke();
         fill(0);
         textAlign(CENTER, CENTER);
-        let ts = textSize();
         if (node.type === "File Package") {
             textSize(ts * 0.8);
             let py = node.y + BOX_HEIGHT / 3;
@@ -131,8 +131,17 @@ function draw() {
         } else {
             text(node.title, node.x + BOX_WIDTH / 2, node.y + BOX_HEIGHT / 2);
         }
-
     });
+
+
+    if (currentStatus) {
+        console.log(currentStatus.name, width);
+        textSize(ts * 1.5);
+        fill(0);
+        textAlign(RIGHT, CENTER);
+        text(currentStatus.name, width * .99, height * 0.03);
+        textSize(ts);
+    }
 }
 
 function windowResized() {
